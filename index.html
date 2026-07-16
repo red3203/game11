@@ -6,7 +6,7 @@
     <title>실시간 랭킹 클릭커 게임!</title>
     
     <!-- Supabase 데이터베이스 연결용 라이브러리 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         body {
@@ -167,11 +167,12 @@
     </div>
 
     <script>
-        // 🚨 내 실제 Supabase 정보가 성공적으로 연동되었습니다!
+        // 내 실제 Supabase 정보가 안전하게 세팅되었습니다!
         const SUPABASE_URL = 'https://gjlxtesbxbleztwpwtuz.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_7PD8EWIWx5jTs4kiOzQLhw_BMENjc85';
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // 💡 충돌 방지를 위해 이름을 'supabase' 대신 'supabaseClient'로 전격 교체!
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let gold = 0;
         let autoMiners = 0;
@@ -216,7 +217,7 @@
         // Supabase 서버에서 상위 10명 랭킹 가져오기
         async function getRankings() {
             try {
-                const { data, error } = await supabase
+                const { data, error } = await supabaseClient
                     .from('rankings')
                     .select('name, score')
                     .order('score', { ascending: false })
@@ -260,15 +261,19 @@
             rankSubmitBtn.disabled = true;
             rankSubmitBtn.textContent = '등록 중...';
 
-            const { error } = await supabase
-                .from('rankings')
-                .insert([{ name: playerName, score: gold }]);
+            try {
+                const { error } = await supabaseClient
+                    .from('rankings')
+                    .insert([{ name: playerName, score: gold }]);
 
-            if (error) {
-                alert("등록 실패: " + error.message);
-            } else {
-                alert("랭킹이 등록되었습니다!");
-                getRankings(); // 등록 직후 랭킹 리스트 리로드
+                if (error) {
+                    alert("등록 실패: " + error.message);
+                } else {
+                    alert("랭킹이 등록되었습니다!");
+                    getRankings(); // 등록 직후 랭킹 리스트 리로드
+                }
+            } catch (err) {
+                console.error(err);
             }
             rankSubmitBtn.disabled = false;
             rankSubmitBtn.textContent = '🏆 내 점수 랭킹 등록하기';
