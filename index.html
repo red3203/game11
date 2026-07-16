@@ -15,7 +15,7 @@
             color: #ffffff;
             text-align: center;
             display: flex;
-            flex-direction: row; /* 좌우 분할 */
+            flex-direction: row;
             align-items: center;
             justify-content: center;
             height: 100vh;
@@ -25,7 +25,6 @@
             position: relative;
         }  
         
-        /* 왼쪽 게임 화면 영역 */
         .game-area {
             display: flex;
             flex-direction: column;
@@ -34,14 +33,13 @@
             width: 400px;
         }
         
-        /* 오른쪽 랭킹 보드 영역 */
         .ranking-area {
             width: 300px;
             background-color: #252636;
             padding: 20px;
             border-radius: 12px;
             border: 2px solid #45475a;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3 );
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
             height: 450px;
@@ -51,7 +49,6 @@
         h2 { color: #a6e3a1; margin-top: 0; margin-bottom: 15px; }
         .score { font-size: 2rem; margin-bottom: 10px; transition: color 0.3s; }
         
-        /* 피버 게이지 */
         #fever-container {
             width: 100%;
             height: 12px;
@@ -68,18 +65,52 @@
             transition: width 0.1s, background-color 0.3s;
         }
 
-        /* 코인(동전) 스타일 */
         .coin {
             font-size: 6rem;
             cursor: pointer;
             transition: transform 0.1s;
             user-select: none;
             margin: 20px 0;
+            position: relative;
         }
         .coin:hover { transform: scale(1.1); }
         .coin:active { transform: scale(0.9); }
         
-        /* 버튼 그리드 레이아웃 (정돈된 UI) */
+        /* 리듬 게임 타이밍 표시 */
+        .rhythm-indicator {
+            position: absolute;
+            width: 100%;
+            height: 80px;
+            bottom: -100px;
+            left: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            pointer-events: none;
+        }
+        .rhythm-zone {
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(166, 227, 161, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: rgba(166, 227, 161, 0.5);
+        }
+        .rhythm-zone.active {
+            border-color: #a6e3a1;
+            color: #a6e3a1;
+            box-shadow: 0 0 15px rgba(166, 227, 161, 0.6);
+        }
+        .rhythm-zone.perfect {
+            border-color: #f9e2af;
+            color: #f9e2af;
+            box-shadow: 0 0 20px rgba(249, 226, 175, 0.8);
+        }
+
         .btn-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -109,7 +140,6 @@
             cursor: not-allowed;
         }
 
-        /* 버튼 위치 편집 기능 */
         .layout-editor {
             position: fixed;
             right: 20px;
@@ -192,7 +222,6 @@
         
         .reset-btn { background-color: #f38ba8; }
         
-        /* 랭킹 리스트 */
         .rank-list {
             list-style: none;
             padding: 0; margin: 0;
@@ -210,7 +239,6 @@
         .rank-item:last-child { border: none; }
         .rank-num { font-weight: bold; color: #f9e2af; margin-right: 10px; }
 
-        /* 클릭 시 +1 애니메이션 */
         .floating-text {
             position: absolute;
             font-size: 1.5rem;
@@ -225,7 +253,6 @@
             100% { transform: translateY(-80px); opacity: 0; }
         }
 
-        /* 로그인 / 오버레이 UI */
         .auth-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(17, 17, 27, 0.95);
@@ -247,7 +274,6 @@
         .login-btn { background-color: #a6e3a1; color: #11111b; }
         .signup-btn { background-color: #89b4fa; color: #11111b; }
         
-        /* 상단 유저 뱃지 */
         .user-badge {
             position: absolute; top: 20px; left: 20px; background-color: #252636;
             padding: 10px 20px; border-radius: 20px; border: 1px solid #45475a;
@@ -257,6 +283,50 @@
         .logout-btn { color: #f9e2af; }
         .delete-account-btn { color: #f38ba8; }
         .user-badge button:hover { text-decoration: underline; }
+
+        /* 관리자 창 스타일 */
+        .admin-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(17, 17, 27, 0.95);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1001; transition: opacity 0.3s ease;
+        }
+        .admin-panel {
+            background-color: #252636; padding: 40px; border-radius: 16px;
+            border: 2px solid #f9e2af; width: 420px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); text-align: center;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .admin-panel h2 { color: #f9e2af; margin-bottom: 20px; }
+        .admin-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #45475a;
+        }
+        .admin-section:last-child { border-bottom: none; }
+        .admin-section h3 { color: #a6e3a1; margin-bottom: 12px; font-size: 0.95rem; }
+        .admin-input {
+            width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 8px;
+            border: 1px solid #45475a; background-color: #1e1e2e; color: #ffffff;
+            box-sizing: border-box; font-size: 0.95rem;
+        }
+        .admin-btn {
+            width: 100%; padding: 12px; margin-bottom: 8px; border-radius: 8px; border: none;
+            font-weight: bold; cursor: pointer; font-size: 0.9rem;
+        }
+        .admin-btn-primary { background-color: #a6e3a1; color: #11111b; }
+        .admin-btn-danger { background-color: #f38ba8; color: #11111b; }
+        .admin-btn-secondary { background-color: #89b4fa; color: #11111b; }
+        .admin-btn:hover { opacity: 0.9; }
+        .admin-info {
+            background-color: #313244; padding: 12px; border-radius: 8px;
+            margin-bottom: 10px; font-size: 0.85rem; color: #cdd6f4;
+            text-align: left;
+        }
+        .admin-exit-btn {
+            width: 100%; padding: 10px; background-color: #585b70; color: #ffffff;
+            border: none; border-radius: 8px; cursor: pointer; font-weight: bold;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
@@ -265,8 +335,8 @@
     <div class="auth-overlay" id="auth-overlay">
         <div class="auth-box">
             <h2>🪙 로그인 필수!</h2>
-            <p style="color: #a6adc8; font-size: 0.85rem; margin-bottom: 20px;">데이터 저장과 랭킹 등록을 위해 계정이 필요합니다.</p>
-            <input type="email" id="auth-email" class="auth-input" placeholder="이메일 입력 (예: test@test.com)">
+            <p style="color: #a6adc8; font-size: 0.85rem; margin-bottom: 20px;">데이터 저장과 랭킹 등록을 위해 계정이 필요합니다.<br><small style="color: #89b4fa;">💡 관리자 코드를 이메일에 입력하면 관리자 모드로 진입합니다.</small></p>
+            <input type="email" id="auth-email" class="auth-input" placeholder="이메일 입력 (또는 관리자 코드)">
             <input type="password" id="auth-password" class="auth-input" placeholder="비밀번호 입력">
             <input type="text" id="auth-nickname" class="auth-input" placeholder="사용할 닉네임 (가입 시만)">
             <div class="auth-btn-group">
@@ -290,14 +360,19 @@
         <div class="score">골드: <span id="gold">0</span></div>
         <div id="pps" style="color: #a6adc8; font-size: 0.9rem; margin-bottom: 10px;">초당 수익: 0 골드</div>
         
-        <!-- 피버 게이지 -->
         <div id="fever-container">
             <div id="fever-bar"></div>
         </div>
         
-        <div class="coin" id="coin">🪙</div>
+        <div class="coin" id="coin">
+            🪙
+            <div class="rhythm-indicator">
+                <div class="rhythm-zone" data-zone="bad">나쁨</div>
+                <div class="rhythm-zone" data-zone="good">좋음</div>
+                <div class="rhythm-zone" data-zone="perfect">완벽</div>
+            </div>
+        </div>
         
-        <!-- 버튼 패널 -->
         <div class="btn-group">
             <button class="btn" id="upgrade-click-btn" disabled>클릭 효율 강화</button>
             <button class="btn" id="upgrade-auto-btn" disabled>광부 고용</button>
@@ -322,28 +397,65 @@
         </ul>
     </div>
 
+    <!-- 👨‍💼 관리자 패널 -->
+    <div class="admin-overlay" id="admin-overlay">
+        <div class="admin-panel">
+            <h2>⚙️ 관리자 패널</h2>
+            
+            <div class="admin-section">
+                <h3>📊 게임 통계</h3>
+                <div class="admin-info">
+                    <div>총 사용자: <strong id="admin-total-users">0</strong></div>
+                    <div>총 랭킹 기록: <strong id="admin-total-scores">0</strong></div>
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3>🔑 관리자 코드 변경</h3>
+                <input type="password" id="admin-new-code" class="admin-input" placeholder="새 관리자 코드 입력">
+                <button class="admin-btn admin-btn-primary" id="admin-change-code-btn">코드 변경</button>
+            </div>
+
+            <div class="admin-section">
+                <h3>🗑️ 랭킹 관리</h3>
+                <button class="admin-btn admin-btn-danger" id="admin-clear-rankings-btn">모든 랭킹 초기화</button>
+                <div class="admin-info" style="margin-top: 10px;">
+                    ⚠️ 이 작업은 되돌릴 수 없습니다.
+                </div>
+            </div>
+
+            <div class="admin-section">
+                <h3>👥 사용자 관리</h3>
+                <button class="admin-btn admin-btn-secondary" id="admin-clear-users-btn">모든 사용자 삭제</button>
+                <div class="admin-info" style="margin-top: 10px;">
+                    ⚠️ 이 작업은 되돌릴 수 없습니다.
+                </div>
+            </div>
+
+            <button class="admin-exit-btn" id="admin-exit-btn">관리자 모드 종료</button>
+        </div>
+    </div>
+
     <script>
-        // Supabase 설정
         const SUPABASE_URL = 'https://gjlxtesbxbleztwpwtuz.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_7PD8EWIWx5jTs4kiOzQLhw_BMENjc85';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY );
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // 게임 변수
         let gold = 0;
         let autoMiners = 0;
         let autoUpgradeCost = 10;
         let clickPower = 1;
         let clickUpgradeCost = 50;
         
-        // 피버 변수
         let feverGauge = 0;
         let isFever = false;
         const MAX_FEVER = 100;
 
         let currentUser = null;
         let userNickname = "";
+        let isAdmin = false;
+        let adminCode = "J$UJdF$HIEIUFHSIE";
 
-        // DOM 요소
         const goldEl = document.getElementById('gold');
         const coinEl = document.getElementById('coin');
         const clickUpgradeBtn = document.getElementById('upgrade-click-btn');
@@ -353,9 +465,14 @@
         const rankSubmitBtn = document.getElementById('rank-submit-btn');
         
         const authOverlay = document.getElementById('auth-overlay');
+        const authEmail = document.getElementById('auth-email');
+        const authPassword = document.getElementById('auth-password');
+        const authNickname = document.getElementById('auth-nickname');
         const userBadge = document.getElementById('user-badge');
 
-        // 버튼 위치 편집 요소
+        const adminOverlay = document.getElementById('admin-overlay');
+        const adminExitBtn = document.getElementById('admin-exit-btn');
+
         const buttonGroup = document.querySelector('.btn-group');
         const movableButtons = [...buttonGroup.querySelectorAll(':scope > .btn')];
         const layoutEditor = document.getElementById('layout-editor');
@@ -370,8 +487,50 @@
         let dragOffsetY = 0;
         let didDrag = false;
 
-        /* ---------------- [ 버튼 위치 직접 편집 ] ---------------- */
+        /* ============ 리듬 게임 시스템 ============ */
+        let rhythmActive = false;
+        let rhythmStartTime = 0;
+        const RHYTHM_DURATION = 2000;
+        const PERFECT_RANGE = [800, 1200];
+        const GOOD_RANGE = [600, 1400];
+        const BAD_RANGE = [0, 2000];
+        const RHYTHM_BONUS = { perfect: 50, good: 20, bad: 5 };
 
+        function startRhythm() {
+            if (rhythmActive) return;
+            rhythmActive = true;
+            rhythmStartTime = Date.now();
+            updateRhythmIndicator();
+            setTimeout(() => { rhythmActive = false; }, RHYTHM_DURATION);
+        }
+
+        function updateRhythmIndicator() {
+            if (!rhythmActive) return;
+            const elapsed = Date.now() - rhythmStartTime;
+            const zones = document.querySelectorAll('.rhythm-zone');
+            zones.forEach(zone => {
+                zone.classList.remove('active', 'perfect');
+                const zoneType = zone.dataset.zone;
+                let isActive = false;
+                if (zoneType === 'bad' && BAD_RANGE[0] <= elapsed && elapsed <= BAD_RANGE[1]) isActive = true;
+                if (zoneType === 'good' && GOOD_RANGE[0] <= elapsed && elapsed <= GOOD_RANGE[1]) isActive = true;
+                if (zoneType === 'perfect' && PERFECT_RANGE[0] <= elapsed && elapsed <= PERFECT_RANGE[1]) isActive = true;
+                if (isActive) zone.classList.add('active');
+                if (zoneType === 'perfect' && PERFECT_RANGE[0] <= elapsed && elapsed <= PERFECT_RANGE[1]) zone.classList.add('perfect');
+            });
+            if (rhythmActive) requestAnimationFrame(updateRhythmIndicator);
+        }
+
+        function getRhythmBonus() {
+            if (!rhythmActive) return 0;
+            const elapsed = Date.now() - rhythmStartTime;
+            if (PERFECT_RANGE[0] <= elapsed && elapsed <= PERFECT_RANGE[1]) return RHYTHM_BONUS.perfect;
+            if (GOOD_RANGE[0] <= elapsed && elapsed <= GOOD_RANGE[1]) return RHYTHM_BONUS.good;
+            if (BAD_RANGE[0] <= elapsed && elapsed <= BAD_RANGE[1]) return RHYTHM_BONUS.bad;
+            return 0;
+        }
+
+        /* ============ 버튼 위치 편집 시스템 ============ */
         function clamp(value, min, max) {
             return Math.min(Math.max(value, min), max);
         }
@@ -381,7 +540,6 @@
                 const rect = button.getBoundingClientRect();
                 return { button, left: rect.left, top: rect.top, width: rect.width };
             });
-
             buttonGroup.classList.add('custom-layout');
             positions.forEach(({ button, left, top, width }) => {
                 button.style.left = `${left}px`;
@@ -393,7 +551,6 @@
         function getButtonLayout() {
             const viewportWidth = Math.max(window.innerWidth, 1);
             const viewportHeight = Math.max(window.innerHeight, 1);
-
             return {
                 version: 3,
                 buttons: movableButtons.map((button) => {
@@ -410,22 +567,18 @@
 
         function applyButtonLayout(layout) {
             if (!layout || !Array.isArray(layout.buttons)) return false;
-
             const viewportWidth = Math.max(window.innerWidth, 1);
             const viewportHeight = Math.max(window.innerHeight, 1);
             buttonGroup.classList.add('custom-layout');
-
             layout.buttons.forEach((item) => {
                 const button = document.getElementById(item.id);
                 if (!button || !buttonGroup.contains(button)) return;
-
                 const width = clamp(
                     (Number(item.widthRatio) || 0.2) * viewportWidth,
                     Math.min(110, viewportWidth - 16),
                     Math.max(viewportWidth - 16, 1)
                 );
                 button.style.width = `${width}px`;
-
                 const height = button.offsetHeight;
                 const left = clamp(
                     (Number(item.xRatio) || 0) * viewportWidth,
@@ -437,7 +590,6 @@
                     0,
                     Math.max(viewportHeight - height, 0)
                 );
-
                 button.style.left = `${left}px`;
                 button.style.top = `${top}px`;
             });
@@ -460,11 +612,9 @@
             buttonGroup.classList.toggle('editing-layout', enabled);
             layoutEditBtn.hidden = enabled;
             layoutSaveBtn.hidden = !enabled;
-
             if (enabled && !buttonGroup.classList.contains('custom-layout')) {
                 freezeCurrentButtonLayout();
             }
-
             movableButtons.forEach((button) => {
                 if (enabled) {
                     button.dataset.layoutWasDisabled = String(button.disabled);
@@ -476,9 +626,7 @@
                     button.removeAttribute('aria-grabbed');
                 }
             });
-
             if (!enabled && typeof updateDisplay === 'function') updateDisplay();
-
             layoutHelp.textContent = enabled
                 ? '버튼을 화면 어디든 끌어 놓으세요. 선택 후 방향키로 1px씩 이동할 수도 있습니다.'
                 : '편집을 누른 뒤 게임 버튼을 마우스나 손가락으로 끌어 이동하세요.';
@@ -493,11 +641,7 @@
 
         function moveDraggedButton(clientX, clientY) {
             if (!draggedButton) return;
-            moveButtonTo(
-                draggedButton,
-                clientX - dragOffsetX,
-                clientY - dragOffsetY
-            );
+            moveButtonTo(draggedButton, clientX - dragOffsetX, clientY - dragOffsetY);
             didDrag = true;
         }
 
@@ -506,7 +650,6 @@
                 if (!isEditingLayout) return;
                 event.preventDefault();
                 event.stopPropagation();
-
                 const rect = button.getBoundingClientRect();
                 draggedButton = button;
                 dragOffsetX = event.clientX - rect.left;
@@ -541,7 +684,6 @@
                 moveButtonTo(button, left + dx, top + dy);
             });
 
-            // 편집 중에는 원래 게임 버튼 기능이 실행되지 않도록 차단합니다.
             button.addEventListener('click', (event) => {
                 if (!isEditingLayout) return;
                 event.preventDefault();
@@ -550,13 +692,11 @@
         });
 
         layoutEditBtn.addEventListener('click', () => setLayoutEditing(true));
-
         layoutSaveBtn.addEventListener('click', () => {
             localStorage.setItem(BUTTON_LAYOUT_KEY, JSON.stringify(getButtonLayout()));
             setLayoutEditing(false);
             layoutHelp.textContent = '버튼 위치가 이 브라우저에 저장되었습니다.';
         });
-
         layoutResetBtn.addEventListener('click', () => {
             if (!confirm('버튼 위치를 처음 상태로 되돌릴까요?')) return;
             localStorage.removeItem(BUTTON_LAYOUT_KEY);
@@ -573,9 +713,7 @@
         window.addEventListener('resize', () => {
             if (!buttonGroup.classList.contains('custom-layout')) return;
             try {
-                const layout = isEditingLayout
-                    ? getButtonLayout()
-                    : JSON.parse(localStorage.getItem(BUTTON_LAYOUT_KEY));
+                const layout = isEditingLayout ? getButtonLayout() : JSON.parse(localStorage.getItem(BUTTON_LAYOUT_KEY));
                 if (layout) applyButtonLayout(layout);
             } catch (error) {
                 console.warn('화면 크기 변경 후 버튼 위치 조정에 실패했습니다.', error);
@@ -584,18 +722,16 @@
 
         loadButtonLayout();
 
-        /* ---------------- [ 게임 로드 및 저장 ] ---------------- */
+        /* ============ 게임 로드 및 저장 ============ */
         
-        async function loadGame(user ) {
+        async function loadGame(user) {
             currentUser = user;
-            userNickname = user.user_metadata.nickname || " 이름없음 ";
-            
+            userNickname = user.user_metadata.nickname || "이름없음";
             document.getElementById('user-name').textContent = userNickname;
             userBadge.style.display = "flex";
             authOverlay.style.opacity = 0;
             setTimeout(() => { authOverlay.style.display = "none"; }, 300);
 
-            // 로컬 데이터 로드
             gold = parseInt(localStorage.getItem(`clicker_${user.id}_gold`)) || 0;
             autoMiners = parseInt(localStorage.getItem(`clicker_${user.id}_miners`)) || 0;
             autoUpgradeCost = parseInt(localStorage.getItem(`clicker_${user.id}_autoCost`)) || 10;
@@ -607,9 +743,27 @@
             syncMyScoreToDatabase();
         }
 
+        async function loadAdminPanel() {
+            isAdmin = true;
+            adminOverlay.style.display = "flex";
+            authOverlay.style.display = "none";
+            userBadge.style.display = "none";
+            
+            try {
+                const { data: users } = await supabaseClient.from('users').select('*');
+                const { data: scores } = await supabaseClient.from('scores').select('*');
+                document.getElementById('admin-total-users').textContent = users ? users.length : 0;
+                document.getElementById('admin-total-scores').textContent = scores ? scores.length : 0;
+            } catch (error) {
+                console.error('관리자 통계 로드 실패:', error);
+            }
+        }
+
         function unloadGame() {
             currentUser = null;
+            isAdmin = false;
             userBadge.style.display = "none";
+            adminOverlay.style.display = "none";
             authOverlay.style.display = "flex";
             authOverlay.style.opacity = 1;
             gold = autoMiners = feverGauge = 0;
@@ -617,222 +771,229 @@
             updateDisplay();
         }
 
-        function saveGame() {
-            if (!currentUser) return;
-            localStorage.setItem(`clicker_${currentUser.id}_gold`, gold);
-            localStorage.setItem(`clicker_${currentUser.id}_miners`, autoMiners);
-            localStorage.setItem(`clicker_${currentUser.id}_autoCost`, autoUpgradeCost);
-            localStorage.setItem(`clicker_${currentUser.id}_clickPower`, clickPower);
-            localStorage.setItem(`clicker_${currentUser.id}_clickCost`, clickUpgradeCost);
-        }
-
-        /* ---------------- [ UI 업데이트 ] ---------------- */
-
-        // 기존 updateDisplay 함수를 아래 내용으로 교체하세요
         function updateDisplay() {
-            goldEl.textContent = Math.floor(gold).toLocaleString();
-            goldEl.style.color = isFever ? "#f38ba8" : "#f9e2af";
-
-            // [추가] 초당 수익 계산 및 표시
-            // 클릭 효율(clickPower)은 초당 수익에 포함하지 않고, 자동 생산량(autoMiners)만 계산
-            const pps = autoMiners; 
-            document.getElementById('pps').textContent = `초당 수익: ${pps.toLocaleString()} 골드`;
-
-            // 클릭 버튼 업데이트
-            clickUpgradeBtn.textContent = `클릭 강화 (비용: ${clickUpgradeCost.toLocaleString()}) | +${clickPower}`;
+            goldEl.textContent = gold;
             clickUpgradeBtn.disabled = gold < clickUpgradeCost;
-
-            // 광부 버튼 업데이트
-            autoUpgradeBtn.textContent = `광부 고용 (비용: ${autoUpgradeCost.toLocaleString()}) | ${autoMiners}명`;
             autoUpgradeBtn.disabled = gold < autoUpgradeCost;
+            clickUpgradeBtn.textContent = `클릭 강화 (비용: ${clickUpgradeCost}) | +${clickPower}`;
+            autoUpgradeBtn.textContent = `광부 고용 (비용: ${autoUpgradeCost}) | ${autoMiners}명`;
+            document.getElementById('pps').textContent = `초당 수익: ${autoMiners} 골드`;
+            feverBar.style.width = `${feverGauge}%`;
         }
 
-        function updateFeverBar() {
-            const percent = (feverGauge / MAX_FEVER) * 100;
-            feverBar.style.width = percent + "%";
-        }
-
-        function startFever() {
-            isFever = true;
-            feverGauge = 0;
-            feverBar.style.background = "#f38ba8";
+        coinEl.addEventListener('click', () => {
+            if (!currentUser || isAdmin) return;
+            const baseGain = clickPower;
+            const rhythmBonus = getRhythmBonus();
+            const totalGain = baseGain + rhythmBonus;
+            gold += totalGain;
+            feverGauge = Math.min(feverGauge + 5, MAX_FEVER);
             
-            setTimeout(() => {
-                isFever = false;
-                feverBar.style.background = "#fab387";
-                updateFeverBar();
-                updateDisplay();
-            }, 10000); // 10초간 지속
-        }
-
-        /* ---------------- [ 상호작용 (이벤트) ] ---------------- */
-
-        // 메인 클릭 이벤트
-        coinEl.addEventListener('click', (event) => {
-            if (!currentUser) return;
-            
-            let gain = isFever ? clickPower * 5 : clickPower;
-            gold += gain;
-            
-            // 피버 로직
-            if (!isFever) {
-                feverGauge += 1;
-                updateFeverBar();
-                if (feverGauge >= MAX_FEVER) startFever();
+            if (rhythmBonus > 0) {
+                const bonusText = document.createElement('div');
+                bonusText.className = 'floating-text';
+                bonusText.style.left = '50%';
+                bonusText.style.top = '50%';
+                bonusText.style.transform = 'translate(-50%, -50%)';
+                bonusText.textContent = `+${totalGain} 🎯`;
+                if (rhythmBonus >= RHYTHM_BONUS.perfect) bonusText.style.color = '#f9e2af';
+                coinEl.appendChild(bonusText);
             }
-            
-            createFloatingText(event.clientX, event.clientY, `+${gain}`);
-            saveGame();
+
             updateDisplay();
+            localStorage.setItem(`clicker_${currentUser.id}_gold`, gold);
+            startRhythm();
         });
 
-        // 둥둥 뜨는 텍스트
-        function createFloatingText(x, y, textStr) {
-            const text = document.createElement('div');
-            text.classList.add('floating-text');
-            text.textContent = textStr;
-            text.style.color = isFever ? "#f38ba8" : "#f9e2af"; // 피버 시 붉은색
-            text.style.left = `${x - 15}px`;
-            text.style.top = `${y - 15}px`;
-            document.body.appendChild(text);
-            setTimeout(() => { text.remove(); }, 800);
-        }
-
-        // 클릭 강화 버튼
         clickUpgradeBtn.addEventListener('click', () => {
             if (gold >= clickUpgradeCost) {
                 gold -= clickUpgradeCost;
-                clickPower *= 2;
-                clickUpgradeCost = Math.floor(clickUpgradeCost * 2.5);
-                saveGame(); updateDisplay(); syncMyScoreToDatabase();
+                clickPower += 1;
+                clickUpgradeCost = Math.ceil(clickUpgradeCost * 1.15);
+                updateDisplay();
+                localStorage.setItem(`clicker_${currentUser.id}_gold`, gold);
+                localStorage.setItem(`clicker_${currentUser.id}_clickPower`, clickPower);
+                localStorage.setItem(`clicker_${currentUser.id}_clickCost`, clickUpgradeCost);
             }
         });
 
-        // 자동 광부 버튼
         autoUpgradeBtn.addEventListener('click', () => {
             if (gold >= autoUpgradeCost) {
                 gold -= autoUpgradeCost;
-                autoMiners++;
-                autoUpgradeCost = Math.floor(autoUpgradeCost * 1.5);
-                saveGame(); updateDisplay(); syncMyScoreToDatabase();
+                autoMiners += 1;
+                autoUpgradeCost = Math.ceil(autoUpgradeCost * 1.15);
+                updateDisplay();
+                localStorage.setItem(`clicker_${currentUser.id}_gold`, gold);
+                localStorage.setItem(`clicker_${currentUser.id}_miners`, autoMiners);
+                localStorage.setItem(`clicker_${currentUser.id}_autoCost`, autoUpgradeCost);
             }
         });
 
-        // 초기화 버튼
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            if (!currentUser) return;
-            if (confirm("정말로 내 컴퓨터의 로컬 데이터만 초기화하시겠습니까?")) {
-                gold = autoMiners = feverGauge = 0;
-                clickPower = 1; autoUpgradeCost = 10; clickUpgradeCost = 50;
-                saveGame(); updateDisplay(); updateFeverBar();
-            }
-        });
-
-        // 자동 수익 인터벌 (1초마다)
         setInterval(() => {
-            if (autoMiners > 0 && currentUser) {
+            if (currentUser && !isAdmin) {
                 gold += autoMiners;
-                saveGame(); updateDisplay();
+                updateDisplay();
+                localStorage.setItem(`clicker_${currentUser.id}_gold`, gold);
             }
         }, 1000);
 
-        /* ---------------- [ 랭킹 시스템 ] ---------------- */
-
-        async function syncMyScoreToDatabase() {
-            if (!currentUser) return;
-            try {
-                const { data } = await supabaseClient.from('rankings').select('score').eq('name', userNickname).single();
-                if (data) {
-                    if (gold > data.score) {
-                        await supabaseClient.from('rankings').update({ score: gold }).eq('name', userNickname);
-                    } else {
-                        gold = data.score; saveGame(); updateDisplay();
-                    }
-                } else {
-                    await supabaseClient.from('rankings').insert([{ name: userNickname, score: gold }]);
-                }
-                getRankings();
-            } catch (err) { console.error("동기화 실패:", err); }
-        }
-
-        async function getRankings() {
-            try {
-                const { data, error } = await supabaseClient.from('rankings').select('name, score').order('score', { ascending: false }).limit(10);
-                if (error) throw error;
-                rankListEl.innerHTML = '';
-                if (!data || data.length === 0) return rankListEl.innerHTML = '<li class="rank-item">등록된 랭커가 없습니다!</li>';
-                
-                data.forEach((item, index) => {
-                    const li = document.createElement('li');
-                    li.classList.add('rank-item');
-                    li.innerHTML = `<span><span class="rank-num">${index + 1}</span>${item.name}</span> <span>${item.score.toLocaleString()} 골드</span>`;
-                    rankListEl.appendChild(li);
-                });
-            } catch (err) { console.error("랭킹 로드 실패:", err); }
-        }
-
-        rankSubmitBtn.addEventListener('click', async () => {
-            rankSubmitBtn.disabled = true; rankSubmitBtn.textContent = '동기화 중...';
-            await syncMyScoreToDatabase();
-            rankSubmitBtn.disabled = false; rankSubmitBtn.textContent = '🏆 실시간 랭킹 강제 업데이트';
+        /* ============ 관리자 기능 ============ */
+        document.getElementById('admin-change-code-btn').addEventListener('click', async () => {
+            const newCode = document.getElementById('admin-new-code').value.trim();
+            if (!newCode) {
+                alert('새 관리자 코드를 입력하세요.');
+                return;
+            }
+            adminCode = newCode;
+            localStorage.setItem('admin_code', adminCode);
+            alert('관리자 코드가 변경되었습니다.');
+            document.getElementById('admin-new-code').value = '';
         });
 
-        setInterval(() => { if (currentUser) syncMyScoreToDatabase(); }, 15000);
+        document.getElementById('admin-clear-rankings-btn').addEventListener('click', async () => {
+            if (!confirm('정말로 모든 랭킹을 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+            try {
+                await supabaseClient.from('scores').delete().neq('id', '');
+                alert('모든 랭킹이 초기화되었습니다.');
+            } catch (error) {
+                alert('랭킹 초기화 실패: ' + error.message);
+            }
+        });
 
-        /* ---------------- [ 인증 & 계정 관리 ] ---------------- */
+        document.getElementById('admin-clear-users-btn').addEventListener('click', async () => {
+            if (!confirm('정말로 모든 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+            try {
+                await supabaseClient.from('users').delete().neq('id', '');
+                alert('모든 사용자가 삭제되었습니다.');
+            } catch (error) {
+                alert('사용자 삭제 실패: ' + error.message);
+            }
+        });
+
+        adminExitBtn.addEventListener('click', () => {
+            unloadGame();
+        });
+
+        /* ============ 인증 시스템 ============ */
+        document.getElementById('btn-login').addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authPassword.value.trim();
+
+            if (!email || !password) {
+                alert('이메일과 비밀번호를 입력하세요.');
+                return;
+            }
+
+            if (email === adminCode) {
+                await loadAdminPanel();
+                authEmail.value = '';
+                authPassword.value = '';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) {
+                    alert('로그인 실패: ' + error.message);
+                    return;
+                }
+                await loadGame(data.user);
+                authEmail.value = '';
+                authPassword.value = '';
+            } catch (error) {
+                alert('로그인 중 오류: ' + error.message);
+            }
+        });
 
         document.getElementById('btn-signup').addEventListener('click', async () => {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            const nickname = document.getElementById('auth-nickname').value.trim();
-            if (!email || !password || !nickname) return alert("모든 정보를 입력하세요!");
-            
-            const { error } = await supabaseClient.auth.signUp({ email, password, options: { data: { nickname } }});
-            if (error) alert("가입 실패: " + error.message);
-            else alert("회원가입 완료! 로그인 해주세요.");
+            const email = authEmail.value.trim();
+            const password = authPassword.value.trim();
+            const nickname = authNickname.value.trim();
+
+            if (!email || !password || !nickname) {
+                alert('모든 필드를 입력하세요.');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email,
+                    password,
+                    options: { data: { nickname } }
+                });
+                if (error) {
+                    alert('회원가입 실패: ' + error.message);
+                    return;
+                }
+                alert('회원가입 완료! 로그인해주세요.');
+                authEmail.value = '';
+                authPassword.value = '';
+                authNickname.value = '';
+            } catch (error) {
+                alert('회원가입 중 오류: ' + error.message);
+            }
         });
 
-        document.getElementById('btn-login').addEventListener('click', async () => {
-            const email = document.getElementById('auth-email').value.trim();
-            const password = document.getElementById('auth-password').value.trim();
-            if (!email || !password) return alert("이메일과 비밀번호를 입력하세요!");
-            
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) alert("로그인 실패: " + error.message);
-            else loadGame(data.user);
-        });
-
-        document.getElementById('btn-logout').addEventListener('click', async () => {
-            await supabaseClient.auth.signOut();
+        document.getElementById('btn-logout').addEventListener('click', () => {
             unloadGame();
-            alert("로그아웃 되었습니다.");
         });
 
         document.getElementById('btn-delete-account').addEventListener('click', async () => {
-            if (!confirm("정말 탈퇴하시겠습니까? 기록이 복구되지 않습니다.") || !confirm("마지막 확인입니다. 진행할까요?")) return;
+            if (!confirm('계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
             try {
-                await supabaseClient.from('rankings').delete().eq('name', userNickname);
-                
-                localStorage.removeItem(`clicker_${currentUser.id}_gold`);
-                localStorage.removeItem(`clicker_${currentUser.id}_miners`);
-                localStorage.removeItem(`clicker_${currentUser.id}_autoCost`);
-                localStorage.removeItem(`clicker_${currentUser.id}_clickPower`);
-                localStorage.removeItem(`clicker_${currentUser.id}_clickCost`);
-
-                await supabaseClient.auth.updateUser({ data: { deleted: true } });
-                await supabaseClient.auth.signOut();
+                await supabaseClient.auth.admin.deleteUser(currentUser.id);
                 unloadGame();
+                alert('계정이 삭제되었습니다.');
+            } catch (error) {
+                alert('계정 삭제 실패: ' + error.message);
+            }
+        });
+
+        rankSubmitBtn.addEventListener('click', async () => {
+            if (!currentUser) return;
+            try {
+                await supabaseClient.from('scores').insert([{
+                    user_id: currentUser.id,
+                    nickname: userNickname,
+                    score: gold,
+                    created_at: new Date()
+                }]);
+                alert('랭킹이 업데이트되었습니다!');
                 getRankings();
-                alert("회원 탈퇴 완료.");
-            } catch (err) { alert("오류: " + err.message); }
+            } catch (error) {
+                alert('랭킹 업데이트 실패: ' + error.message);
+            }
         });
 
-        // 앱 구동 시 자동 세션 확인
-        supabaseClient.auth.getSession().then(({ data }) => {
-            if (data.session) loadGame(data.session.user);
-            else unloadGame();
-        });
+        async function getRankings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('scores')
+                    .select('*')
+                    .order('score', { ascending: false })
+                    .limit(10);
 
+                if (error) throw error;
+
+                rankListEl.innerHTML = '';
+                if (data && data.length > 0) {
+                    data.forEach((item, index) => {
+                        const li = document.createElement('li');
+                        li.className = 'rank-item';
+                        li.innerHTML = `<span class="rank-num">#${index + 1}</span><span>${item.nickname}</span><span>${item.score}</span>`;
+                        rankListEl.appendChild(li);
+                    });
+                } else {
+                    rankListEl.innerHTML = '<li class="rank-item">랭킹 데이터가 없습니다.</li>';
+                }
+            } catch (error) {
+                console.error('랭킹 조회 실패:', error);
+                rankListEl.innerHTML = '<li class="rank-item">랭킹을 불러올 수 없습니다.</li>';
+            }
+        }
+
+        adminCode = localStorage.getItem('admin_code') || "J$UJdF$HIEIUFHSIE";
+        updateDisplay();
     </script>
 </body>
 </html>
