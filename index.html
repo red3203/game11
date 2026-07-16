@@ -23,7 +23,7 @@
             gap: 50px;
             overflow: hidden;
             position: relative;
-        }
+        }  
         
         /* 왼쪽 게임 화면 영역 */
         .game-area {
@@ -207,6 +207,13 @@
     <div class="game-area">
         <h1>골드 클릭커 🪙</h1>
         <div class="score">골드: <span id="gold">0</span></div>
+
+        <!-- 변경 전 -->
+        <div class="score">골드: <span id="gold">0</span></div>
+
+        <!-- 변경 후 (초당 수익 표시 추가) -->
+        <div class="score">골드: <span id="gold">0</span></div>
+        <div id="pps" style="color: #a6adc8; font-size: 0.9rem; margin-bottom: 10px;">초당 수익: 0 골드</div>
         
         <!-- 피버 게이지 -->
         <div id="fever-container">
@@ -228,7 +235,7 @@
     <div class="ranking-area">
         <h2>실시간 랭킹 Top 10</h2>
         <ul class="rank-list" id="rank-list">
-            <li class="rank-item">로딩 중...</li>
+            <li class="rank-item">로딩 중.</li>
         </ul>
     </div>
 
@@ -267,9 +274,9 @@
 
         /* ---------------- [ 게임 로드 및 저장 ] ---------------- */
         
-        async function loadGame(user) {
+        async function loadGame(user ) {
             currentUser = user;
-            userNickname = user.user_metadata.nickname || "이름없음";
+            userNickname = user.user_metadata.nickname || " 이름없음 ";
             
             document.getElementById('user-name').textContent = userNickname;
             userBadge.style.display = "flex";
@@ -309,9 +316,15 @@
 
         /* ---------------- [ UI 업데이트 ] ---------------- */
 
+        // 기존 updateDisplay 함수를 아래 내용으로 교체하세요
         function updateDisplay() {
             goldEl.textContent = Math.floor(gold).toLocaleString();
-            goldEl.style.color = isFever ? "#f38ba8" : "#f9e2af"; // 피버 시 붉은색 글씨
+            goldEl.style.color = isFever ? "#f38ba8" : "#f9e2af";
+
+            // [추가] 초당 수익 계산 및 표시
+            // 클릭 효율(clickPower)은 초당 수익에 포함하지 않고, 자동 생산량(autoMiners)만 계산
+            const pps = autoMiners; 
+            document.getElementById('pps').textContent = `초당 수익: ${pps.toLocaleString()} 골드`;
 
             // 클릭 버튼 업데이트
             clickUpgradeBtn.textContent = `클릭 강화 (비용: ${clickUpgradeCost.toLocaleString()}) | +${clickPower}`;
