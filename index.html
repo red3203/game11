@@ -41,7 +41,7 @@
             padding: 20px;
             border-radius: 12px;
             border: 2px solid #45475a;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3 );
             display: flex;
             flex-direction: column;
             height: 450px;
@@ -107,6 +107,69 @@
             background-color: #585b70;
             color: #a6adc8;
             cursor: not-allowed;
+        }
+
+        /* 버튼 위치 편집 기능 */
+        .layout-editor {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 900;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+            gap: 8px;
+            width: min(360px, calc(100vw - 40px));
+            padding: 10px;
+            border: 1px solid #45475a;
+            border-radius: 12px;
+            background: rgba(37, 38, 54, 0.96);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+        }
+        .layout-editor button {
+            padding: 9px 12px;
+            border: none;
+            border-radius: 7px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        #layout-edit-btn { background: #89b4fa; color: #11111b; }
+        #layout-save-btn { background: #a6e3a1; color: #11111b; }
+        #layout-reset-btn { background: #f38ba8; color: #11111b; }
+        .layout-help {
+            flex-basis: 100%;
+            margin: 0;
+            color: #cdd6f4;
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+        .layout-editor.editing {
+            outline: 2px solid #f9e2af;
+        }
+        .btn-group.custom-layout {
+            position: relative;
+            display: block;
+            min-height: 210px;
+        }
+        .btn-group.custom-layout > .btn {
+            position: absolute;
+            margin: 0;
+            touch-action: none;
+        }
+        .btn-group.editing-layout {
+            outline: 2px dashed #f9e2af;
+            outline-offset: 8px;
+            background: rgba(249, 226, 175, 0.05);
+        }
+        .btn-group.editing-layout > .btn {
+            cursor: grab;
+            user-select: none;
+        }
+        .btn-group.editing-layout > .btn:active { cursor: grabbing; }
+        .btn-group.editing-layout > .btn::after {
+            content: ' 이동';
+            opacity: 0.6;
+            font-size: 0.72rem;
         }
         
         .reset-btn { background-color: #f38ba8; }
@@ -207,12 +270,6 @@
     <div class="game-area">
         <h1>골드 클릭커 🪙</h1>
         <div class="score">골드: <span id="gold">0</span></div>
-
-        <!-- 변경 전 -->
-        <div class="score">골드: <span id="gold">0</span></div>
-
-        <!-- 변경 후 (초당 수익 표시 추가) -->
-        <div class="score">골드: <span id="gold">0</span></div>
         <div id="pps" style="color: #a6adc8; font-size: 0.9rem; margin-bottom: 10px;">초당 수익: 0 골드</div>
         
         <!-- 피버 게이지 -->
@@ -231,6 +288,14 @@
         </div>
     </div>
 
+    <!-- 버튼 위치 편집 도구 -->
+    <div class="layout-editor" id="layout-editor">
+        <button type="button" id="layout-edit-btn">버튼 위치 편집</button>
+        <button type="button" id="layout-save-btn" hidden>위치 저장</button>
+        <button type="button" id="layout-reset-btn">위치 초기화</button>
+        <p class="layout-help" id="layout-help">편집을 누른 뒤 게임 버튼을 마우스나 손가락으로 끌어 이동하세요.</p>
+    </div>
+
     <!-- 🏆 오른쪽: 실시간 랭킹 보드 -->
     <div class="ranking-area">
         <h2>실시간 랭킹 Top 10</h2>
@@ -243,7 +308,7 @@
         // Supabase 설정
         const SUPABASE_URL = 'https://gjlxtesbxbleztwpwtuz.supabase.co'; 
         const SUPABASE_ANON_KEY = 'sb_publishable_7PD8EWIWx5jTs4kiOzQLhw_BMENjc85';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY );
 
         // 게임 변수
         let gold = 0;
@@ -271,6 +336,194 @@
         
         const authOverlay = document.getElementById('auth-overlay');
         const userBadge = document.getElementById('user-badge');
+
+        // 버튼 위치 편집 요소
+        const buttonGroup = document.querySelector('.btn-group');
+        const movableButtons = [...buttonGroup.querySelectorAll(':scope > .btn')];
+        const layoutEditor = document.getElementById('layout-editor');
+        const layoutEditBtn = document.getElementById('layout-edit-btn');
+        const layoutSaveBtn = document.getElementById('layout-save-btn');
+        const layoutResetBtn = document.getElementById('layout-reset-btn');
+        const layoutHelp = document.getElementById('layout-help');
+        const BUTTON_LAYOUT_KEY = 'clicker_button_layout_v1';
+        let isEditingLayout = false;
+        let draggedButton = null;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let didDrag = false;
+
+        /* ---------------- [ 버튼 위치 직접 편집 ] ---------------- */
+
+        function freezeCurrentButtonLayout() {
+            const groupRect = buttonGroup.getBoundingClientRect();
+            const positions = movableButtons.map((button) => {
+                const rect = button.getBoundingClientRect();
+                return {
+                    button,
+                    left: rect.left - groupRect.left,
+                    top: rect.top - groupRect.top,
+                    width: rect.width,
+                    height: rect.height
+                };
+            });
+
+            const neededHeight = Math.max(
+                buttonGroup.offsetHeight,
+                ...positions.map(({ top, height }) => top + height)
+            );
+
+            buttonGroup.classList.add('custom-layout');
+            buttonGroup.style.height = `${Math.ceil(neededHeight)}px`;
+
+            positions.forEach(({ button, left, top, width }) => {
+                button.style.left = `${left}px`;
+                button.style.top = `${top}px`;
+                button.style.width = `${width}px`;
+            });
+        }
+
+        function getButtonLayout() {
+            return {
+                groupHeight: buttonGroup.offsetHeight,
+                buttons: movableButtons.map((button) => ({
+                    id: button.id,
+                    xRatio: parseFloat(button.style.left || 0) / Math.max(buttonGroup.clientWidth, 1),
+                    top: parseFloat(button.style.top || 0),
+                    widthRatio: button.offsetWidth / Math.max(buttonGroup.clientWidth, 1)
+                }))
+            };
+        }
+
+        function applyButtonLayout(layout) {
+            if (!layout || !Array.isArray(layout.buttons)) return false;
+
+            buttonGroup.classList.add('custom-layout');
+            buttonGroup.style.height = `${Math.max(Number(layout.groupHeight) || 210, 120)}px`;
+
+            layout.buttons.forEach((item) => {
+                const button = document.getElementById(item.id);
+                if (!button || !buttonGroup.contains(button)) return;
+
+                const groupWidth = Math.max(buttonGroup.clientWidth, 1);
+                const width = Math.min(
+                    Math.max((Number(item.widthRatio) || 0.48) * groupWidth, 110),
+                    groupWidth
+                );
+                const left = Math.min(
+                    Math.max((Number(item.xRatio) || 0) * groupWidth, 0),
+                    Math.max(groupWidth - width, 0)
+                );
+
+                button.style.width = `${width}px`;
+                button.style.left = `${left}px`;
+                button.style.top = `${Math.max(Number(item.top) || 0, 0)}px`;
+            });
+            return true;
+        }
+
+        function loadButtonLayout() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(BUTTON_LAYOUT_KEY));
+                applyButtonLayout(saved);
+            } catch (error) {
+                console.warn('저장된 버튼 위치를 불러오지 못했습니다.', error);
+                localStorage.removeItem(BUTTON_LAYOUT_KEY);
+            }
+        }
+
+        function setLayoutEditing(enabled) {
+            isEditingLayout = enabled;
+            layoutEditor.classList.toggle('editing', enabled);
+            buttonGroup.classList.toggle('editing-layout', enabled);
+            layoutEditBtn.hidden = enabled;
+            layoutSaveBtn.hidden = !enabled;
+            layoutHelp.textContent = enabled
+                ? '게임 버튼을 원하는 위치로 끌어 놓은 뒤 “위치 저장”을 누르세요.'
+                : '편집을 누른 뒤 게임 버튼을 마우스나 손가락으로 끌어 이동하세요.';
+
+            if (enabled && !buttonGroup.classList.contains('custom-layout')) {
+                freezeCurrentButtonLayout();
+            }
+        }
+
+        function moveDraggedButton(clientX, clientY) {
+            if (!draggedButton) return;
+            const groupRect = buttonGroup.getBoundingClientRect();
+            const maxLeft = Math.max(buttonGroup.clientWidth - draggedButton.offsetWidth, 0);
+            const maxTop = Math.max(buttonGroup.clientHeight - draggedButton.offsetHeight, 0);
+            const left = Math.min(Math.max(clientX - groupRect.left - dragOffsetX, 0), maxLeft);
+            const top = Math.min(Math.max(clientY - groupRect.top - dragOffsetY, 0), maxTop);
+
+            draggedButton.style.left = `${left}px`;
+            draggedButton.style.top = `${top}px`;
+            didDrag = true;
+        }
+
+        movableButtons.forEach((button) => {
+            button.addEventListener('pointerdown', (event) => {
+                if (!isEditingLayout) return;
+                event.preventDefault();
+                event.stopPropagation();
+
+                const rect = button.getBoundingClientRect();
+                draggedButton = button;
+                dragOffsetX = event.clientX - rect.left;
+                dragOffsetY = event.clientY - rect.top;
+                didDrag = false;
+                button.setPointerCapture(event.pointerId);
+            });
+
+            button.addEventListener('pointermove', (event) => {
+                if (!isEditingLayout || draggedButton !== button) return;
+                moveDraggedButton(event.clientX, event.clientY);
+            });
+
+            button.addEventListener('pointerup', (event) => {
+                if (draggedButton !== button) return;
+                if (button.hasPointerCapture(event.pointerId)) button.releasePointerCapture(event.pointerId);
+                draggedButton = null;
+            });
+
+            // 편집 중에는 원래 게임 버튼 기능이 실행되지 않도록 차단합니다.
+            button.addEventListener('click', (event) => {
+                if (!isEditingLayout) return;
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }, true);
+        });
+
+        layoutEditBtn.addEventListener('click', () => setLayoutEditing(true));
+
+        layoutSaveBtn.addEventListener('click', () => {
+            localStorage.setItem(BUTTON_LAYOUT_KEY, JSON.stringify(getButtonLayout()));
+            setLayoutEditing(false);
+            layoutHelp.textContent = '버튼 위치가 이 브라우저에 저장되었습니다.';
+        });
+
+        layoutResetBtn.addEventListener('click', () => {
+            if (!confirm('버튼 위치를 처음 상태로 되돌릴까요?')) return;
+            localStorage.removeItem(BUTTON_LAYOUT_KEY);
+            setLayoutEditing(false);
+            buttonGroup.classList.remove('custom-layout', 'editing-layout');
+            buttonGroup.style.height = '';
+            movableButtons.forEach((button) => {
+                button.style.left = '';
+                button.style.top = '';
+                button.style.width = '';
+            });
+            layoutHelp.textContent = '버튼 위치가 기본 배열로 초기화되었습니다.';
+        });
+
+        window.addEventListener('resize', () => {
+            if (isEditingLayout || !buttonGroup.classList.contains('custom-layout')) return;
+            try {
+                applyButtonLayout(JSON.parse(localStorage.getItem(BUTTON_LAYOUT_KEY)));
+            } catch (error) {
+                console.warn('화면 크기 변경 후 버튼 위치 조정에 실패했습니다.', error);
+            }
+        });
+
+        loadButtonLayout();
 
         /* ---------------- [ 게임 로드 및 저장 ] ---------------- */
         
