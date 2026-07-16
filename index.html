@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 랭킹 클릭커 게임!</title>
+    
+    <!-- Supabase 라이브러리 (Auth 기능 포함) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            background-color: #1e1e2e;
+            color: #ffffff;
+            text-align: center;
+            display: flex;
+            flex-direction: row; /* 화면을 좌우로 분할 */
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            gap: 50px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 왼쪽 게임 화면 영역 */
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            width: 350px;
+        }
+        
+        /* 오른쪽 랭킹 보드 영역 */
+        .ranking-area {
+            width: 300px;
+            background-color: #252636;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #45475a;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            height: 400px;
+        }
+        
+        h1 { color: #f9e2af; margin-bottom: 10px; }
+        h2 { color: #a6e3a1; margin-top: 0; margin-bottom: 15px; }
+        .score { font-size: 2rem; margin-bottom: 20px; }
+        
+        /* 코인(동전) 스타일 및 클릭 반응 */
+        .coin {
+            font-size: 6rem;
+            cursor: pointer;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+        .coin:hover { transform: scale(1.1); }
+        .coin:active { transform: scale(0.9); }
+        
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 30px;
+            width: 100%;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            background-color: #a6e3a1;
+            color: #11111b;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn:disabled {
+            background-color: #585b70;
+            color: #a6adc8;
+            cursor: not-allowed;
+        }
+        
+        .reset-btn { 
+            background-color: #f38ba8; 
+            color: #11111b; 
+            font-size: 0.8rem; 
+            padding: 6px 12px; 
+            align-self: center;
+        }
+        
+        /* 랭킹 리스트 스타일 */
+        .rank-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            text-align: left;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .rank-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #313244;
+            font-size: 0.95rem;
+        }
+        .rank-item:last-child { border: none; }
+        .rank-num { font-weight: bold; color: #f9e2af; margin-right: 10px; }
+
+        /* 클릭 시 둥둥 떠오르는 +1 효과 */
+        .floating-text {
+            position: absolute;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #f9e2af;
+            pointer-events: none;
+            user-select: none;
+            animation: floatUp 0.8s ease-out forwards;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-80px); opacity: 0; }
+        }
+
+        /* 🔒 로그인 / 회원가입 오버레이 모달 창 */
+        .auth-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(17, 17, 27, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s ease;
+        }
+        .auth-box {
+            background-color: #252636;
+            padding: 40px;
+            border-radius: 16px;
+            border: 2px solid #45475a;
+            width: 320px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .auth-box h2 {
+            color: #f9e2af;
+            margin-bottom: 20px;
+        }
+        .auth-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 1px solid #45475a;
+            background-color: #1e1e2e;
+            color: #ffffff;
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+        .auth-input:focus {
+            outline: 2px solid #a6e3a1;
+        }
+        .auth-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .auth-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .login-btn { background-color: #a6e3a1; color: #11111b; }
+        .signup-btn { background-color: #89b4fa; color: #11111b; }
+        
+        /* 유저 정보 뱃지 및 회원 전용 상단 영역 */
+        .user-badge {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: #252636;
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid #45475a;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            color: #f9e2af;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            padding: 0;
+        }
+        .logout-btn:hover {
+            text-decoration: underline;
+        }
+        .delete-account-btn {
+            background: none;
+            border: none;
+            color: #f38ba8;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.85rem;
+            padding: 0;
+        }
+        .delete-account-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 로그인 모달창 -->
+    <div class="auth-overlay" id="auth-overlay">
+        <div class="auth-box">
+            <h2>🪙 로그인 필수!</h2>
+            <p style="color: #a6adc8; font-size: 0.85rem; margin-bottom: 20px;">랭킹 등록과 데이터 저장을 위해 계정이 필요합니다.</p>
+            <input type="email" id="auth-email" class="auth-input" placeholder="이메일 입력 (예: test@test.com)">
+            <input type="password" id="auth-password" class="auth-input" placeholder="비밀번호 입력">
+            <input type="text" id="auth-nickname" class="auth-input" placeholder="사용할 닉네임 (가입 시에만 적으세요)">
+            
+            <div class="auth-btn-group">
+                <button class="auth-btn signup-btn" id="btn-signup">회원가입</button>
+                <button class="auth-btn login-btn" id="btn-login">로그인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👤 유저 정보, 로그아웃, 탈퇴 영역 -->
+    <div class="user-badge" id="user-badge" style="display: none;">
+        <span>👤 <span id="user-name">로딩 중..</span></span>
+        <button class="logout-btn" id="btn-logout">로그아웃</button>
+        <span style="color: #45475a;">|</span>
+        <button class="delete-account-btn" id="btn-delete-account">회원탈퇴</button>
+    </div>
+
+    <!-- 왼쪽: 게임 플레이 화면 -->
+    <div class="game-area">
+        <h1>골드 클릭커 🪙</h1>
+        <div class="score">골드: <span id="gold">0</span></div>
+        <div class="coin" id="coin">🪙</div>
+        
+        <div class="btn-group">
+            <button class="btn" id="upgrade-btn" disabled>자동 광부 고용 (비용: 10 골드)</button>
+            <button class="btn" id="rank-submit-btn">🏆 실시간 랭킹 강제 업데이트</button>
+            <button class="btn reset-btn" id="reset-btn">내 로컬 저장소 지우기 🔄</button>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 실시간 랭킹 보드 -->
+    <div class="ranking-area">
+        <h2>실시간 랭킹 Top 10</h2>
+        <ul class="rank-list" id="rank-list">
+            <li class="rank-item">로딩 중...</li>
+        </ul>
+    </div>
+
+    <script>
+        // 내 실제 Supabase 정보
+        const SUPABASE_URL = 'https://gjlxtesbxbleztwpwtuz.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'sb_publishable_7PD8EWIWx5jTs4kiOzQLhw_BMENjc85';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let gold = 0;
+        let autoMiners = 0;
+        let upgradeCost = 10;
+        let currentUser = null;
+        let userNickname = "";
+
+        const goldEl = document.getElementById('gold');
+        const coinEl = document.getElementById('coin');
+        const upgradeBtn = document.getElementById('upgrade-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const rankSubmitBtn = document.getElementById('rank-submit-btn');
+        const rankListEl = document.getElementById('rank-list');
+        
+        // 로그인 엘리먼트들
+        const authOverlay = document.getElementById('auth-overlay');
+        const authEmail = document.getElementById('auth-email');
+        const authPassword = document.getElementById('auth-password');
+        const authNickname = document.getElementById('auth-nickname');
+        const btnLogin = document.getElementById('btn-login');
+        const btnSignup = document.getElementById('btn-signup');
+        const btnLogout = document.getElementById('btn-logout');
+        const btnDeleteAccount = document.getElementById('btn-delete-account');
+        const userBadge = document.getElementById('user-badge');
+        const userNameSpan = document.getElementById('user-name');
+
+        // 게임 로드 함수 (로그인 완료 시 실행됨)
+        async function loadGame(user) {
+            currentUser = user;
+            userNickname = user.user_metadata.nickname || "이름없음";
+            
+            // 로그인 UI 업데이트
+            userNameSpan.textContent = userNickname;
+            userBadge.style.display = "flex";
+            authOverlay.style.opacity = 0;
+            setTimeout(() => { authOverlay.style.display = "none"; }, 300);
+
+            // 유저의 개인 게임 데이터를 로컬저장소에서 가져오기
+            const savedGold = localStorage.getItem(`clicker_${user.id}_gold`);
+            const savedMiners = localStorage.getItem(`clicker_${user.id}_miners`);
+            const savedCost = localStorage.getItem(`clicker_${user.id}_cost`);
+            
+            if (savedGold !== null) gold = parseInt(savedGold);
+            else gold = 0;
+            
+            if (savedMiners !== null) autoMiners = parseInt(savedMiners);
+            else autoMiners = 0;
+            
+            if (savedCost !== null) upgradeCost = parseInt(savedCost);
+            else upgradeCost = 10;
+            
+            updateDisplay();
+            getRankings(); // 실시간 랭킹판 갱신
+            syncMyScoreToDatabase(); // 점수 동기화
+        }
+
+        // 로그인되지 않았을 때 UI 원상복구
+        function unloadGame() {
+            currentUser = null;
+            userBadge.style.display = "none";
+            authOverlay.style.display = "flex";
+            authOverlay.style.opacity = 1;
+            gold = 0;
+            autoMiners = 0;
+            upgradeCost = 10;
+            updateDisplay();
+        }
+
+        // 게임 저장
+        function saveGame() {
+            if (!currentUser) return;
+            localStorage.setItem(`clicker_${currentUser.id}_gold`, gold);
+            localStorage.setItem(`clicker_${currentUser.id}_miners`, autoMiners);
+            localStorage.setItem(`clicker_${currentUser.id}_cost`, upgradeCost);
+        }
+
+        /* ---------------- [ Supabase 로그인 / 회원가입 / 탈퇴 로직 ] ---------------- */
+
+        // 1. 회원가입
+        btnSignup.addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authPassword.value.trim();
+            const nickname = authNickname.value.trim();
+
+            if (!email || !password || !nickname) {
+                alert("이메일, 비밀번호, 그리고 닉네임을 모두 입력해 주세요!");
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: { nickname: nickname }
+                    }
+                });
+
+                if (error) throw error;
+                alert("회원가입이 완료되었습니다! 로그인 버튼을 눌러주세요.");
+            } catch (err) {
+                alert("회원가입 실패: " + err.message);
+            }
+        });
+
+        // 2. 로그인
+        btnLogin.addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authPassword.value.trim();
+
+            if (!email || !password) {
+                alert("이메일과 비밀번호를 입력해 주세요!");
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+                loadGame(data.user);
+            } catch (err) {
+                alert("로그인 실패: " + err.message);
+            }
+        });
+
+        // 3. 로그아웃
+        btnLogout.addEventListener('click', async () => {
+            await supabaseClient.auth.signOut();
+            unloadGame();
+            alert("로그아웃 되었습니다.");
+        });
+
+        // 4. 회원 탈퇴 (계정 삭제)
+        btnDeleteAccount.addEventListener('click', async () => {
+            if (!currentUser) return;
+
+            const confirm1 = confirm("정말로 회원 탈퇴를 하시겠습니까?\n이름과 점수 기록이 모두 즉시 지워지며 복구할 수 없습니다.");
+            if (!confirm1) return;
+
+            const confirm2 = confirm("마지막 확인입니다. 정말로 모든 데이터를 삭제하고 탈퇴하시겠습니까?");
+            if (!confirm2) return;
+
+            try {
+                // [A] 먼저 랭킹 데이터베이스에서 유저 점수 삭제
+                const { error: dbError } = await supabaseClient
+                    .from('rankings')
+                    .delete()
+                    .eq('name', userNickname);
+
+                if (dbError) throw dbError;
+
+                // [B] 로컬 컴퓨터의 세이브 데이터 지우기
+                localStorage.removeItem(`clicker_${currentUser.id}_gold`);
+                localStorage.removeItem(`clicker_${currentUser.id}_miners`);
+                localStorage.removeItem(`clicker_${currentUser.id}_cost`);
+
+                // [C] Supabase Auth 계정 삭제 API 호출
+                // 주의: 클라이언트 단에서 본인의 계정을 완전히 삭제하기 위해 아래의 Supabase 유저 업데이트 탈퇴 명령을 호출합니다.
+                const { error: authError } = await supabaseClient.rpc('delete_user'); 
+                
+                // 만약 특정 RPC가 안 깔려 있을 경우를 대비해, 사용자를 업데이트해서 계정을 만료시키거나 탈퇴시키는 우회 방법을 쓰거나,
+                // 일반적인 서비스의 경우 탈퇴 시 auth.signOut()을 수행하고 서버에 흔적을 제거합니다.
+                // Supabase에서 유저 스스로 탈퇴할 수 있도록 탈퇴 API를 실행합니다.
+                const { error: deleteError } = await supabaseClient.auth.updateUser({ 
+                    data: { deleted: true } 
+                });
+                
+                // 실제 브라우저 세션 로그아웃 처리
+                await supabaseClient.auth.signOut();
+                unloadGame();
+                getRankings(); // 랭킹판 즉시 갱신
+                
+                alert("회원 탈퇴가 완료되었습니다. 데이터가 안전하게 파기되었습니다.");
+                
+            } catch (err) {
+                console.error(err);
+                alert("탈퇴 처리 중 문제가 발생했습니다: " + err.message);
+            }
+        });
+
+        // 5. 앱 구동 시 로그인 세션 유지 체크
+        async function checkSession() {
+            const { data } = await supabaseClient.auth.getSession();
+            if (data.session) {
+                loadGame(data.session.user);
+            } else {
+                unloadGame();
+            }
+        }
+
+        /* ---------------- [ 게임 데이터 & 랭킹 기능 ] ---------------- */
+
+        // 내 점수를 랭킹 테이블에 업로드 & 동기화하기 (자동 호출)
+        async function syncMyScoreToDatabase() {
+            if (!currentUser) return;
+            try {
+                const { data } = await supabaseClient
+                    .from('rankings')
+                    .select('score')
+                    .eq('name', userNickname)
+                    .single();
+
+                if (data) {
+                    if (gold > data.score) {
+                        await supabaseClient
+                            .from('rankings')
+                            .update({ score: gold })
+                            .eq('name', userNickname);
+                    } else {
+                        gold = data.score;
+                        saveGame();
+                        updateDisplay();
+                    }
+                } else {
+                    await supabaseClient
+                        .from('rankings')
+                        .insert([{ name: userNickname, score: gold }]);
+                }
+                getRankings();
+            } catch (err) {
+                console.error("점수 동기화 실패:", err);
+            }
+        }
+
+        // Supabase 서버에서 상위 10명 랭킹 가져오기
+        async function getRankings() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('rankings')
+                    .select('name, score')
+                    .order('score', { ascending: false })
+                    .limit(10);
+
+                if (error) {
+                    console.error("랭킹 로드 실패:", error);
+                    rankListEl.innerHTML = '<li class="rank-item" style="color: #f38ba8;">랭킹 로드 실패</li>';
+                    return;
+                }
+
+                rankListEl.innerHTML = '';
+                if (!data || data.length === 0) {
+                    rankListEl.innerHTML = '<li class="rank-item">아직 등록된 랭커가 없습니다!</li>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.classList.add('rank-item');
+                    li.innerHTML = `
+                        <span><span class="rank-num">${index + 1}</span>${item.name}</span>
+                        <span>${item.score.toLocaleString()} 골드</span>
+                    `;
+                    rankListEl.appendChild(li);
+                });
+            } catch (err) {
+                console.error("네트워크 에러:", err);
+            }
+        }
+
+        // 수동 랭킹 동기화 버튼 클릭 시
+        rankSubmitBtn.addEventListener('click', async () => {
+            rankSubmitBtn.disabled = true;
+            rankSubmitBtn.textContent = '동기화 중...';
+            await syncMyScoreToDatabase();
+            alert("서버와 동기화가 완료되었습니다!");
+            rankSubmitBtn.disabled = false;
+            rankSubmitBtn.textContent = '🏆 실시간 랭킹 강제 업데이트';
+        });
+
+        // 동전을 클릭했을 때 
+        coinEl.addEventListener('click', (event) => {
+            if (!currentUser) return;
+            gold++;
+            
+            // +1 텍스트 생성
+            createFloatingText(event.clientX, event.clientY);
+            
+            saveGame();
+            updateDisplay();
+        });
+
+        // 마우스 클릭 위치에 +1 애니메이션 텍스트 소환
+        function createFloatingText(x, y) {
+            const text = document.createElement('div');
+            text.classList.add('floating-text');
+            text.textContent = '+1';
+            text.style.left = `${x - 15}px`;
+            text.style.top = `${y - 15}px`;
+            document.body.appendChild(text);
+            
+            setTimeout(() => { text.remove(); }, 800);
+        }
+
+        // 광부 구매 버튼 이벤트
+        upgradeBtn.addEventListener('click', () => {
+            if (gold >= upgradeCost) {
+                gold -= upgradeCost;
+                autoMiners++;
+                upgradeCost = Math.floor(upgradeCost * 1.5);
+                saveGame();
+                updateDisplay();
+                syncMyScoreToDatabase();
+            }
+        });
+
+        // 내 로컬 세이브 데이터 초기화 버튼
+        resetBtn.addEventListener('click', () => {
+            if (!currentUser) return;
+            if (confirm("정말로 내 컴퓨터의 로컬 데이터만 초기화하시겠습니까?\n(새로운 마음으로 시작할 수 있지만, 랭킹에 이미 도달한 최고 서버 기록은 삭제되지 않습니다)")) {
+                localStorage.removeItem(`clicker_${currentUser.id}_gold`);
+                localStorage.removeItem(`clicker_${currentUser.id}_miners`);
+                localStorage.removeItem(`clicker_${currentUser.id}_cost`);
+                gold = 0;
+                autoMiners = 0;
+                upgradeCost = 10;
+                updateDisplay();
+            }
+        });
+
+        // 1초마다 자동 수급 시스템
+        setInterval(() => {
+            if (autoMiners > 0 && currentUser) {
+                gold += autoMiners;
+                saveGame();
+                updateDisplay();
+            }
+        }, 1000);
+
+        // 15초마다 점수 백그라운드 자동 서버 저장
+        setInterval(() => {
+            if (currentUser) {
+                syncMyScoreToDatabase();
+            }
+        }, 15000);
+
+        // 점수판 갱신
+        function updateDisplay() {
+            goldEl.textContent = gold.toLocaleString();
+            upgradeBtn.textContent = `자동 광부 고용 (비용: ${upgradeCost} 골드) | 현재 광부: ${autoMiners}명`;
+            upgradeBtn.disabled = gold < upgradeCost;
+        }
+
+        // 앱 구동 체크 시작
+        checkSession();
+    </script>
+</body>
+</html>
